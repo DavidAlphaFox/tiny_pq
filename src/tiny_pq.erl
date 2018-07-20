@@ -56,21 +56,21 @@ prune_collect_old(Function, Acc0, {Size, TreeNode}, Priority) ->
 
 
 iterate_nonexpired_nodes(Function, State, {K, V, S, L}, Now) when K > Now ->
-    Acc1 = iterate_nonexpired_nodes(Function, State, L, Now),
-    Acc2 = lists:foldr(Function, Acc1, V),
-    iterate_nonexpired_nodes(Function, Acc2, S, Now);
+    Acc1 = iterate_nonexpired_nodes(Function, State, L, Now), %% K 比当前时间大，遍历Bigger部分
+    Acc2 = lists:foldr(Function, Acc1, V), %% 将这些节点放入Acc2中
+    iterate_nonexpired_nodes(Function, Acc2, S, Now); %% 遍历smaller部分
 iterate_nonexpired_nodes(Function, State, {K, _V, _S, L}, Now) when K =< Now ->
-    iterate_nonexpired_nodes(Function, State, L, Now);
-iterate_nonexpired_nodes(_Function, State, nil, _Now) ->
+    iterate_nonexpired_nodes(Function, State, L, Now); %% 当前节点小于Now，遍历Bigger部分
+iterate_nonexpired_nodes(_Function, State, nil, _Now) -> %% 所有的节点都遍历完成了
     State.
 
-
+%% 保留优先级比当前大的
 prune_expired_nodes({K, V, S, L}, Now) when K > Now ->
     {Tree1, NumDeleted} = prune_expired_nodes(S, Now),
     {{K, V, Tree1, L}, NumDeleted};
 prune_expired_nodes({K, _V, S, L}, Now) when K =< Now ->
-    {_, NumDeleted_S} = prune_expired_nodes(S, Now),
-    {Tree1, NumDeleted_L} = prune_expired_nodes(L, Now),
+    {_, NumDeleted_S} = prune_expired_nodes(S, Now),%% smaller 部分的全都丢弃掉
+    {Tree1, NumDeleted_L} = prune_expired_nodes(L, Now),%% biger 部分
     {Tree1, NumDeleted_S + NumDeleted_L + 1};
 prune_expired_nodes(nil, _Now) ->
     {nil, 0}.
